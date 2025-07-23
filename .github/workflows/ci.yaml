@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - staging
+      - master
+
+jobs:
+  deploy-staging:
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ID_SEER_DEPLOYER }}
+
+      - name: Deploy to Seer (staging)
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@sinistercode.com << 'EOF'
+            cd namesq-stg
+            git pull
+          EOF
+
+  deploy-master:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ID_SEER_DEPLOYER }}
+
+      - name: Deploy to Seer (master)
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@sinistercode.com << 'EOF'
+            cd namesq
+            git pull
+          EOF
