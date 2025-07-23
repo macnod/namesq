@@ -1,0 +1,7 @@
+#!/bin/bash
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+plackup -MPlack::App::File \
+        -e "Plack::App::File->new(file => \"$script_dir/index.html\")" \
+        --host 127.0.0.1 \
+        -p 8086

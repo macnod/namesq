@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Names Search</title>
+    <style>
+      #title {
+          text-align: center;
+      }
+      #content {
+          display: flex;
+          font-family: Arial, sans-serif;
+      }
+      #filter-pane {
+          width: 50%;
+          padding: 20px;
+          border-right: 1px solid #ccc;
+      }
+      #result-pane {
+          width: 50%;
+          padding: 20px;
+      }
+      label {
+          display: block;
+          margin-bottom: 0px;
+	        margin-top: 15px;
+      }
+      input, select {
+          width: 100%;
+          padding: 5px;
+          margin-top: 5px;
+      }
+      button {
+          margin-top: 20px;
+          padding: 10px;
+          background-color: #007bff;
+          color: white;
+          border: none;
+          cursor: pointer;
+      }
+      button:hover {
+          background-color: #0056b3;
+      }
+      ul {
+          list-style-type: none;
+          padding: 0;
+      }
+      li {
+          padding: 5px 0;
+          border-bottom: 1px solid #eee;
+      }
+      #pagination {
+          margin-top: 20px;
+      }
+      #pagination button {
+          margin-right: 10px;
+          padding: 5px 10px;
+          background-color: #50cbff;
+          border: 1px solid #ccc;
+          cursor: pointer;
+      }
+      #pagination button:hover {
+          background-color: #007bff;
+      }
+      #copy-link {
+          background-color: #28a745;
+          margin-left: 10px;
+      }
+      #copy-link:hover {
+          background-color: #218838;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="title">
+      <h1>Lil' Baby Names Search</h1>
+    </div>
+    <div id="content">
+    <div id="filter-pane">
+      <h2>Query</h2>
+      <p>Fill in one or more of the following fields, then click Search. Don't use spaces anywhere. "Regular Expression" is a Perl-compatible regular expression. You probably don't need this.</p>
+      <label for="starts-with">Starts with:</label>
+      <input type="text" id="starts-with">
+
+      <label for="ends-with">Ends with:</label>
+      <input type="text" id="ends-with">
+
+      <label for="contains-letters">Contains letters:</label>
+      <input type="text" id="contains-letters">
+
+      <label for="contains-string">Contains string:</label>
+      <input type="text" id="contains-string">
+
+      <label for="regex">Regular Expression:</label>
+      <input type="text" id="regex">
+
+      <label for="sort">Sort By:</label>
+      <select id="sort">
+        <option value="freq-desc">Popularity</option>
+        <option value="alpha">Alphabetical</option>
+        <option value="alpha-desc">Descending Alphabetical</option>
+        <option value="freq-asc">Rarity</option>
+        <option value="length">Length</option>
+      </select>
+
+      <label for="gender">Gender:</label>
+      <select id="gender">
+        <option value="">Unspecified</option>
+        <option value="male,mostly-male,gender-neutral">Male</option>
+        <option value="female,mostly-female,gender-neutral">Female</option>
+        <option value="mostly-male,gender-neutral,mostly-female">Gender Neutral</option>
+      </select>
+
+      <button onclick="fetchNames(1)">Search</button>
+      <button id="copy-link" onclick="copyLink()">Copy Link</button>
+    </div> <!-- filter-pane -->
+    <div id="result-pane">
+      <h2>Results</h2>
+      <div id="results"></div>
+    </div>
+    </div> <!-- content -->
+    <script>
+      function fetchNames(page) {
+          let startsWith = document.getElementById('starts-with').value.trim();
+          let endsWith = document.getElementById('ends-with').value.trim();
+          let containsLetters = document.getElementById('contains-letters').value.trim();
+          let containsString = document.getElementById('contains-string').value.trim();
+          let regex = document.getElementById('regex').value.trim();
+          let sort = document.getElementById('sort').value;
+          let gender = document.getElementById('gender').value;
+
+          // Build browser URL parameters (omit defaults)
+          let browserParams = new URLSearchParams();
+          if (startsWith) browserParams.append('starts-with', startsWith);
+          if (endsWith) browserParams.append('ends-with', endsWith);
+          if (containsLetters) browserParams.append('contains-letters', containsLetters);
+          if (containsString) browserParams.append('contains-string', containsString);
+          if (regex) browserParams.append('regex', regex);
+          if (sort !== 'freq-desc') browserParams.append('sort', sort);
+          if (gender) browserParams.append('gender', gender);
+          if (page !== 1) browserParams.append('page', page);
+
+          // Update browser URL
+          let newURL = window.location.pathname;
+          const queryString = browserParams.toString();
+          if (queryString) {
+              newURL += '?' + queryString;
+          }
+          history.pushState({}, '', newURL);
+
+          // Build API parameters
+          let apiParams = new URLSearchParams();
+          apiParams.append('page-size', 20);
+          apiParams.append('format', 'json');
+          apiParams.append('page', page);
+          if (startsWith) apiParams.append('starts-with', startsWith);
+          if (endsWith) apiParams.append('ends-with', endsWith);
+          if (containsLetters) apiParams.append('contains-letters', containsLetters);
+          if (containsString) apiParams.append('contains-string', containsString);
+          if (regex) apiParams.append('regex', regex);
+          if (sort) apiParams.append('sort', sort);
+          if (gender) apiParams.append('gender', gender);
+
+          let url = 'https://namesapi.sinistercode.com/api/names?' + apiParams.toString();
+
+          fetch(url)
+              .then(response => {
+                  if (!response.ok) {
+                      throw new Error('Network response was not ok');
+                  }
+                  return response.json();
+              })
+              .then(data => {
+                  let resultsDiv = document.getElementById('results');
+                  resultsDiv.innerHTML = '';
+
+                  let list = document.createElement('ul');
+                  data.results.forEach(item => {
+                      let li = document.createElement('li');
+                      li.textContent = item.name;
+                      list.appendChild(li);
+                  });
+                  resultsDiv.appendChild(list);
+
+                  // Pagination
+                  let totalMatches = data['total-matches'];
+                  let pageSize = data['page-size'];
+                  let totalPages = Math.ceil(totalMatches / pageSize);
+
+                  let pagDiv = document.createElement('div');
+                  pagDiv.id = 'pagination';
+
+                  if (page > 1) {
+                      let prevButton = document.createElement('button');
+                      prevButton.textContent = 'Prev';
+                      prevButton.onclick = () => fetchNames(page - 1);
+                      pagDiv.appendChild(prevButton);
+                  }
+
+                  let pageInfo = document.createElement('span');
+                  pageInfo.textContent = ` Page ${data.page} of ${totalPages} `;
+                  pagDiv.appendChild(pageInfo);
+
+                  if (page < totalPages) {
+                      let nextButton = document.createElement('button');
+                      nextButton.textContent = 'Next';
+                      nextButton.onclick = () => fetchNames(page + 1);
+                      pagDiv.appendChild(nextButton);
+                  }
+
+                  resultsDiv.appendChild(pagDiv);
+              })
+              .catch(error => {
+                  console.error('Error fetching names:', error);
+                  let resultsDiv = document.getElementById('results');
+                  resultsDiv.innerHTML = '<p>Error loading results. Please try again.</p>';
+              });
+      }
+
+      function loadFromURL() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const resultsDiv = document.getElementById('results');
+          resultsDiv.innerHTML = ''; // Clear results
+
+          document.getElementById('starts-with').value = urlParams.get('starts-with') || '';
+          document.getElementById('ends-with').value = urlParams.get('ends-with') || '';
+          document.getElementById('contains-letters').value = urlParams.get('contains-letters') || '';
+          document.getElementById('contains-string').value = urlParams.get('contains-string') || '';
+          document.getElementById('regex').value = urlParams.get('regex') || '';
+          document.getElementById('sort').value = urlParams.get('sort') || 'freq-desc';
+          document.getElementById('gender').value = urlParams.get('gender') || '';
+
+          const page = parseInt(urlParams.get('page')) || 1;
+
+          if (urlParams.size > 0) {
+              fetchNames(page);
+          }
+      }
+
+      function copyLink() {
+          navigator.clipboard.writeText(window.location.href)
+              .then(() => {
+                  const button = document.getElementById('copy-link');
+                  const originalText = button.textContent;
+                  button.textContent = 'Copied!';
+                  setTimeout(() => {
+                      button.textContent = originalText;
+                  }, 2000);
+              })
+              .catch(err => {
+                  console.error('Failed to copy link: ', err);
+                  alert('Failed to copy link. Please copy the URL manually.');
+              });
+      }
+
+      // Load from URL on initial page load
+      loadFromURL();
+
+      // Handle browser back/forward
+      window.addEventListener('popstate', loadFromURL);
+      </script>
+  </body>
+</html>
