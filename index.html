@@ -173,43 +173,48 @@
               })
               .then(data => {
                   let resultsDiv = document.getElementById('results');
-                  resultsDiv.innerHTML = '';
+                  let totalMatches = data['total-matches']
 
-                  let list = document.createElement('ul');
-                  data.results.forEach(item => {
-                      let li = document.createElement('li');
-                      li.textContent = item.name;
-                      list.appendChild(li);
-                  });
-                  resultsDiv.appendChild(list);
-
-                  // Pagination
-                  let totalMatches = data['total-matches'];
-                  let pageSize = data['page-size'];
-                  let totalPages = Math.ceil(totalMatches / pageSize);
-
-                  let pagDiv = document.createElement('div');
-                  pagDiv.id = 'pagination';
-
-                  if (page > 1) {
-                      let prevButton = document.createElement('button');
-                      prevButton.textContent = 'Prev';
-                      prevButton.onclick = () => fetchNames(page - 1);
-                      pagDiv.appendChild(prevButton);
+                  if (totalMatches == 0) {
+                      resultsDiv.innerHTML = '<p>No names matched your query.</p>'
+                  } else {
+                      resultsDiv.innerHTML = '';
+    
+                      let list = document.createElement('ul');
+                      data.results.forEach(item => {
+                          let li = document.createElement('li');
+                          li.textContent = item.name;
+                          list.appendChild(li);
+                      });
+                      resultsDiv.appendChild(list);
+    
+                      // Pagination
+                      let pageSize = data['page-size'];
+                      let totalPages = Math.ceil(totalMatches / pageSize);
+    
+                      let pagDiv = document.createElement('div');
+                      pagDiv.id = 'pagination';
+    
+                      if (page > 1) {
+                          let prevButton = document.createElement('button');
+                          prevButton.textContent = 'Prev';
+                          prevButton.onclick = () => fetchNames(page - 1);
+                          pagDiv.appendChild(prevButton);
+                      }
+    
+                      let pageInfo = document.createElement('span');
+                      pageInfo.textContent = ` Page ${data.page} of ${totalPages} `;
+                      pagDiv.appendChild(pageInfo);
+    
+                      if (page < totalPages) {
+                          let nextButton = document.createElement('button');
+                          nextButton.textContent = 'Next';
+                          nextButton.onclick = () => fetchNames(page + 1);
+                          pagDiv.appendChild(nextButton);
+                      }
+    
+                      resultsDiv.appendChild(pagDiv);
                   }
-
-                  let pageInfo = document.createElement('span');
-                  pageInfo.textContent = ` Page ${data.page} of ${totalPages} `;
-                  pagDiv.appendChild(pageInfo);
-
-                  if (page < totalPages) {
-                      let nextButton = document.createElement('button');
-                      nextButton.textContent = 'Next';
-                      nextButton.onclick = () => fetchNames(page + 1);
-                      pagDiv.appendChild(nextButton);
-                  }
-
-                  resultsDiv.appendChild(pagDiv);
               })
               .catch(error => {
                   console.error('Error fetching names:', error);
