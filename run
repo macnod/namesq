@@ -1,7 +1,13 @@
 #!/bin/bash
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+if [[ "$script_dir" == *-stg ]]; then
+    port=8087
+else
+    port=8086
+fi
+
 plackup -MPlack::App::File \
         -e "Plack::App::File->new(file => \"$script_dir/index.html\")" \
         --host 127.0.0.1 \
-        -p 8086
+        -p "$port"
