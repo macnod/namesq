@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baby Names Search</title>
+    <title>Names Search</title>
     <style>
       #title {
           text-align: center;
@@ -70,56 +70,88 @@
       #copy-link:hover {
           background-color: #218838;
       }
+      footer {
+          text-align: center;
+          padding: 20px 0;
+          font-size: 14px;
+          color: #333
+      }
+      footer p {
+          margin: 10px 0;
+      }
+      hr {
+          border: 0;
+          border-top: 1px solid #ccc;
+          margin: 20px auto;
+          width: 80%
+      }
+      .bullet {
+          font-size: 1.5em;
+          padding: 0 5px;
+          vertical-align: middle;
+      }
     </style>
   </head>
   <body>
     <div id="title">
-      <h1>Lil' Baby Names Search</h1>
+      <h1>Names Search</h1>
     </div>
     <div id="content">
-    <div id="filter-pane">
-      <h2>Query</h2>
-      <p>Fill in one or more of the following fields, then click Search. Don't use spaces anywhere. "Regular Expression" is a Perl-compatible regular expression. You probably don't need this.</p>
-      <label for="starts-with">Starts with:</label>
-      <input type="text" id="starts-with">
+      <div id="filter-pane">
+        <h2>Query</h2>
+        <p>Fill in one or more of the following fields, then click Search. Don't use spaces anywhere. "Regular Expression" is a Perl-compatible regular expression. You probably don't need this.</p>
+        <label for="starts-with">Starts with:</label>
+        <input type="text" id="starts-with">
 
-      <label for="ends-with">Ends with:</label>
-      <input type="text" id="ends-with">
+        <label for="ends-with">Ends with:</label>
+        <input type="text" id="ends-with">
 
-      <label for="contains-letters">Contains letters:</label>
-      <input type="text" id="contains-letters">
+        <label for="contains-letters">Contains letters:</label>
+        <input type="text" id="contains-letters">
 
-      <label for="contains-string">Contains string:</label>
-      <input type="text" id="contains-string">
+        <label for="contains-string">Contains string:</label>
+        <input type="text" id="contains-string">
 
-      <label for="regex">Regular Expression:</label>
-      <input type="text" id="regex">
+        <label for="regex">Regular Expression:</label>
+        <input type="text" id="regex">
 
-      <label for="sort">Sort By:</label>
-      <select id="sort">
-        <option value="freq-desc">Popularity</option>
-        <option value="alpha">Alphabetical</option>
-        <option value="alpha-desc">Descending Alphabetical</option>
-        <option value="freq-asc">Rarity</option>
-        <option value="length">Length</option>
-      </select>
+        <label for="sort">Sort By:</label>
+        <select id="sort">
+          <option value="freq-desc">Popularity</option>
+          <option value="alpha">Alphabetical</option>
+          <option value="alpha-desc">Descending Alphabetical</option>
+          <option value="freq-asc">Rarity</option>
+          <option value="length">Length</option>
+        </select>
 
-      <label for="gender">Gender:</label>
-      <select id="gender">
-        <option value="">Unspecified</option>
-        <option value="male,mostly-male,gender-neutral">Male</option>
-        <option value="female,mostly-female,gender-neutral">Female</option>
-        <option value="mostly-male,gender-neutral,mostly-female">Gender Neutral</option>
-      </select>
+        <label for="gender">Gender:</label>
+        <select id="gender">
+          <option value="">Unspecified</option>
+          <option value="male,mostly-male,gender-neutral">Male</option>
+          <option value="female,mostly-female,gender-neutral">Female</option>
+          <option value="mostly-male,gender-neutral,mostly-female">Gender Neutral</option>
+        </select>
 
-      <button onclick="fetchNames(1)">Search</button>
-      <button id="copy-link" onclick="copyLink()">Copy Link</button>
-    </div> <!-- filter-pane -->
-    <div id="result-pane">
-      <h2>Results</h2>
-      <div id="results"></div>
-    </div>
+        <button onclick="fetchNames(1)">Search</button>
+        <button id="copy-link" onclick="copyLink()">Copy Link</button>
+      </div> <!-- filter-pane -->
+      <div id="result-pane">
+        <h2>Results</h2>
+        <div id="results"></div>
+      </div>
     </div> <!-- content -->
+    <footer>
+      <hr>
+      <p>
+        Created by <a href="https://sinistercode.com/public/donnie/contact">Donnie Cameron</a>
+        <span class="bullet">&bull;</span>
+        <a href="mailto:macnod@gmail.com">macnod@gmail.com</a>
+        <span class="bullet">&bull;</span>
+        <a href="tel:+19194299377">+1 (919) 429-9377</a> (text first)
+        <span class="bullet">&bull;</span>
+        <a href="https://sinistercode.com/en/public/donnie/resume">Technical CV</a>
+      </p>
+    </footer>
     <script>
       function fetchNames(page) {
           let startsWith = document.getElementById('starts-with').value.trim();
@@ -179,7 +211,7 @@
                       resultsDiv.innerHTML = '<p>No names matched your query.</p>'
                   } else {
                       resultsDiv.innerHTML = '';
-    
+                      
                       let list = document.createElement('ul');
                       data.results.forEach(item => {
                           let li = document.createElement('li');
@@ -187,32 +219,32 @@
                           list.appendChild(li);
                       });
                       resultsDiv.appendChild(list);
-    
+                      
                       // Pagination
                       let pageSize = data['page-size'];
                       let totalPages = Math.ceil(totalMatches / pageSize);
-    
+                      
                       let pagDiv = document.createElement('div');
                       pagDiv.id = 'pagination';
-    
+                      
                       if (page > 1) {
                           let prevButton = document.createElement('button');
                           prevButton.textContent = 'Prev';
                           prevButton.onclick = () => fetchNames(page - 1);
                           pagDiv.appendChild(prevButton);
                       }
-    
+                      
                       let pageInfo = document.createElement('span');
                       pageInfo.textContent = ` Page ${data.page} of ${totalPages} `;
                       pagDiv.appendChild(pageInfo);
-    
+                      
                       if (page < totalPages) {
                           let nextButton = document.createElement('button');
                           nextButton.textContent = 'Next';
                           nextButton.onclick = () => fetchNames(page + 1);
                           pagDiv.appendChild(nextButton);
                       }
-    
+                      
                       resultsDiv.appendChild(pagDiv);
                   }
               })
@@ -264,6 +296,6 @@
 
       // Handle browser back/forward
       window.addEventListener('popstate', loadFromURL);
-      </script>
+                                        </script>
   </body>
 </html>
